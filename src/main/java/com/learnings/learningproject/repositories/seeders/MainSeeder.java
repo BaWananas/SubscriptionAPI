@@ -12,13 +12,11 @@ public class MainSeeder {
     public static class DevMainSeeder implements CommandLineRunner {
 
         private final ISeeder groupSeeder;
-        private final ISeeder cancellationSeeder;
         private final ISeeder subscriptionSeeder;
 
         @Autowired
-        public DevMainSeeder(GroupSeeder groupSeeder, CancellationSeeder cancellationSeeder, SubscriptionSeeder subscriptionSeeder) {
+        public DevMainSeeder(GroupSeeder groupSeeder, SubscriptionSeeder subscriptionSeeder) {
             this.groupSeeder = groupSeeder;
-            this.cancellationSeeder = cancellationSeeder;
             this.subscriptionSeeder = subscriptionSeeder;
         }
 
@@ -26,7 +24,6 @@ public class MainSeeder {
         public void run(String... args) throws Exception {
             groupSeeder.run();
             subscriptionSeeder.run();
-            cancellationSeeder.run();
         }
     }
 }

@@ -58,7 +58,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
         else
         {
-            logger.info("JWT Token does not begin with Bearer String - Invalid or no token provided.");
+            if (requestTokenHeader != null && !requestTokenHeader.isEmpty())
+            {
+                logger.info("Invalid token provided.");
+            }
         }
 
         // Verify the token validity.

@@ -1,26 +1,23 @@
 package com.learnings.learningproject.services;
 
-import com.learnings.learningproject.models.Cancellation;
 import com.learnings.learningproject.models.Group;
 import com.learnings.learningproject.models.Subscription;
+import com.learnings.learningproject.models.exceptions.EntityNotFoundException;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 public interface ISubscriptionService {
-    List<Subscription> getAllSubscriptions();
-    Subscription getSubscription(long id);
-    Subscription createSubscription(long groupId, long userId);
-    Subscription createSubscription(long groupId, long userId, Date subDate, boolean isActive, Date endingDate);
-    /**
-     * Don't delete definitively the sub. Just create a cancellation and deactivate the subscription.
-     * @param subId : long
-     * @return boolean
-     */
-    boolean deleteSubscription(long subId);
-    boolean deleteSubscription(long subId, String reason);
-    long getSubscriptionUserId(long subId);
-    Cancellation getSubscriptionCancellation(long subId);
-    Group getSubscriptionGroup(long subId);
+    // Get methods
+    List<Subscription> getSubscriptions();
+    List<Subscription> getSubscriptionsByGroup(Group group);
+    Subscription getSubscriptionById(long id) throws EntityNotFoundException;
+    long getSubscriptionUserId(long subId) throws EntityNotFoundException;
+
+    // Create methods
+    Subscription createSubscription(long groupId, long userId) throws EntityNotFoundException;
+    Subscription createSubscription(long groupId, long userId, Date subDate) throws EntityNotFoundException;
+
+    // Delete methods
+    boolean deleteSubscription(long subId) throws EntityNotFoundException;
 }

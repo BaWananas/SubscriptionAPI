@@ -2,8 +2,11 @@ package com.learnings.learningproject.services.implementations;
 
 import com.learnings.learningproject.models.Group;
 import com.learnings.learningproject.models.Subscription;
+import com.learnings.learningproject.models.exceptions.EntityNotFoundException;
 import com.learnings.learningproject.repositories.IGroupRepository;
+import com.learnings.learningproject.repositories.ISubscriptionRepository;
 import com.learnings.learningproject.services.IGroupService;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,62 +17,86 @@ import java.util.Optional;
 public class GroupServiceImpl implements IGroupService {
 
     private final IGroupRepository groupRepository;
+    private final ISubscriptionRepository subscriptionRepository;
 
     @Autowired
-    public GroupServiceImpl(IGroupRepository groupRepository) {
+    public GroupServiceImpl(IGroupRepository groupRepository, ISubscriptionRepository subscriptionRepository) {
         this.groupRepository = groupRepository;
+        this.subscriptionRepository = subscriptionRepository;
     }
 
     @Override
-    public List<Group> getAllGroups() {
-        return (List<Group>) groupRepository.findAll();
+    public List<Group> getGroups() {
+        List<Group> groups = (List<Group>) groupRepository.findAll();
+        return this.addLinksRef(groups);
     }
 
     @Override
-    public Group getGroupByName(String name) {
+    public List<Group> getGroupsByAssociation(long associationId) {
+        List<Group> groups = groupRepository.findAllByAssociationId(associationId);
+        return this.addLinksRef(groups);
+    }
+
+    @Override
+    public Group getGroupByName(String name) throws EntityNotFoundException {
         Optional<Group> group = groupRepository.findFirstByName(name);
         if (group.isPresent())
         {
-            return group.get();
+            return this.addLinksRef(group.get());
         }
         else
         {
-            return null;
+            throw new EntityNotFoundException();
         }
     }
 
     @Override
-    public Group getGroup(long id) {
+    public Group getGroupById(long id) throws EntityNotFoundException {
         Optional<Group> group = groupRepository.findById(id);
         if (group.isPresent())
         {
-            return group.get();
+            return this.addLinksRef(group.get());
         }
         else
         {
-            return null;
+            throw new EntityNotFoundException();
+        }
+    }
+
+    @Override
+    public Group getGroupBySubscription(long subscriptionId) throws EntityNotFoundException {
+        Optional<Subscription> subscription = subscriptionRepository.findById(subscriptionId);
+        if (subscription.isPresent())
+        {
+            return this.addLinksRef(subscription.get().getGroup());
+        }
+        else
+        {
+            throw new EntityNotFoundException();
         }
     }
 
     @Override
     public Group createGroup(String name, String description, long associationId) {
-        //TODO Association existence verification.
+        //TODO Association existence verification && validation
         if (true)
         {
             Group group = new Group(name, description, associationId);
-            return groupRepository.save(group);
+            return this.addLinksRef(groupRepository.save(group));
         }
         else
         {
+            // TODO Throw BadRequestException
             return null;
         }
     }
 
     @Override
-    public Group updateGroup(long groupId, String name, String description, long associationId) {
+    public Group updateGroup(long groupId, String name, String description, long associationId) throws EntityNotFoundException {
         Optional<Group> group = groupRepository.findById(groupId);
         if (group.isPresent())
         {
+            // TODO do validation; throw BadRequestException if necessary
             Group updatedGroup = group.get();
             if (name != null && !name.equals(updatedGroup.getName())) updatedGroup.setName(name);
             if (description != null && !description.equals(updatedGroup.getDescription())) updatedGroup.setDescription(description);
@@ -78,16 +105,16 @@ public class GroupServiceImpl implements IGroupService {
             {
                 updatedGroup.setAssociationId(associationId);
             }
-            return groupRepository.save(updatedGroup);
+            return this.addLinksRef(groupRepository.save(updatedGroup));
         }
         else
         {
-            return null;
+            throw new EntityNotFoundException();
         }
     }
 
     @Override
-    public boolean deleteGroup(long groupId) {
+    public boolean deleteGroup(long groupId) throws EntityNotFoundException {
         Optional<Group> group = groupRepository.findById(groupId);
         if (group.isPresent())
         {
@@ -96,25 +123,23 @@ public class GroupServiceImpl implements IGroupService {
         }
         else
         {
-            return false;
+            throw new EntityNotFoundException();
         }
     }
 
-    @Override
-    public List<Subscription> getGroupSubscriptions(long groupId) {
-        Optional<Group> group = groupRepository.findById(groupId);
-        if (group.isPresent())
-        {
-            return group.get().getSubscriptions();
-        }
-        else
-        {
-            return null;
-        }
+    private List<Group> addLinksRef(List<Group> groups)
+    {
+        groups.forEach(group -> {
+            group.addSelfLinkRef();
+            group.addResourceLinkRef();
+        });
+        return groups;
     }
 
-    @Override
-    public List<Group> getAssociationGroups(long associationId) {
-        return groupRepository.findAllByAssociationId(associationId);
+    private Group addLinksRef(Group group)
+    {
+        group.addSelfLinkRef();
+        group.addResourceLinkRef();
+        return group;
     }
 }
