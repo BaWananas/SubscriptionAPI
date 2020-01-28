@@ -1,77 +1,59 @@
 package com.learnings.learningproject.controllers;
 
-import com.learnings.learningproject.models.Cancellation;
+import com.learnings.learningproject.models.Group;
 import com.learnings.learningproject.models.Subscription;
-import com.learnings.learningproject.services.IDateService;
+import com.learnings.learningproject.models.dtos.SubscriptionDto;
+import com.learnings.learningproject.models.exceptions.EntityNotFoundException;
+import com.learnings.learningproject.services.IGroupService;
 import com.learnings.learningproject.services.ISubscriptionService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.constraints.NotNull;
-import java.util.Date;
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
 @RequestMapping("/subscriptions")
+@CrossOrigin(origins = "*")
 public class SubscriptionController {
 
     private final ISubscriptionService subscriptionService;
-    private final IDateService dateService;
-
-    public SubscriptionController(ISubscriptionService subscriptionService, IDateService dateService) {
-        this.subscriptionService = subscriptionService;
-        this.dateService = dateService;
-    }
+    private final IGroupService groupService;
 
     @Autowired
-
+    public SubscriptionController(ISubscriptionService subscriptionService, IGroupService groupService) {
+        this.subscriptionService = subscriptionService;
+        this.groupService = groupService;
+    }
 
     @GetMapping
-    public List<Subscription> getSubscriptions()
-    {
-        return subscriptionService.getAllSubscriptions();
+    public CollectionModel<Subscription> getSubscriptions() {
+        return new CollectionModel<>(subscriptionService.getSubscriptions());
     }
 
     @GetMapping("/{id}")
-    public Subscription getSubscription(@PathVariable long id)
-    {
-        return subscriptionService.getSubscription(id);
+    public EntityModel<Subscription> getSubscription(@PathVariable long id) throws EntityNotFoundException {
+        return new EntityModel<>(subscriptionService.getSubscriptionById(id));
     }
 
-    @GetMapping("/{id}/cancellation")
-    public Cancellation getCancellation(@PathVariable long id)
-    {
-        return subscriptionService.getSubscriptionCancellation(id);
+    @GetMapping("/{id}/group")
+    public EntityModel<Group> getSubscriptionGroup(@PathVariable long id) throws EntityNotFoundException {
+        return new EntityModel<>(this.groupService.getGroupBySubscription(id));
     }
 
     @PostMapping
-    public Subscription createSubscription(@RequestParam @NotNull long groupId,
-                                           @RequestParam @NotNull long userId,
-                                           @RequestParam(required = false) String subscriptionDate,
-                                           @RequestParam(defaultValue = "true") boolean isActive,
-                                           @RequestParam(required = false) String endingDate)
-    {
-        Date subDate = null;
-        Date endDate = null;
-        if (subscriptionDate != null)
-        {
-            subDate = dateService.parse(subscriptionDate);
-        }
-
-        if (endingDate != null)
-        {
-            endDate = dateService.parse(endingDate);
-        }
-
-        return subscriptionService.createSubscription(groupId, userId, subDate, isActive, endDate);
+    @ResponseStatus(HttpStatus.CREATED)
+    public EntityModel<Subscription> createSubscription(@Valid @RequestBody SubscriptionDto subscriptionDto) throws EntityNotFoundException {
+        return new EntityModel<>(subscriptionService.createSubscription(subscriptionDto.getGroupId(), subscriptionDto.getUserId(), subscriptionDto.getSubscriptionDate()));
     }
 
     @DeleteMapping("/{id}")
-    public boolean deleteSubscription(@PathVariable long id,
-                                      @RequestParam(required = false) String reason)
-    {
-        return subscriptionService.deleteSubscription(id, reason);
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteSubscription(@PathVariable long id) throws EntityNotFoundException {
+        subscriptionService.deleteSubscription(id);
     }
 
 }

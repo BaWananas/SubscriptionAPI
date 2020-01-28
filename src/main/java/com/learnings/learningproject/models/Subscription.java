@@ -2,10 +2,16 @@ package com.learnings.learningproject.models;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.learnings.learningproject.controllers.GroupController;
+import com.learnings.learningproject.controllers.SubscriptionController;
+import com.learnings.learningproject.models.exceptions.EntityNotFoundException;
 import com.learnings.learningproject.services.IDateService;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.server.core.Relation;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -13,21 +19,17 @@ import java.util.Date;
 
 @Entity
 @Data
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Subscription {
+@Relation(itemRelation = "item", collectionRelation = "items")
+public class Subscription extends RepresentationModel<Subscription> {
+
+    public Subscription() {
+    }
 
     public Subscription(long userId, Group group, Date subscriptionDate) {
+        this();
         this.userId = userId;
         this.group = group;
         this.subscriptionDate = subscriptionDate;
-    }
-
-    public Subscription(long userId, Group group, Date subscriptionDate, Date endingDate, boolean isActive) {
-        this.userId = userId;
-        this.group = group;
-        if (subscriptionDate != null) this.subscriptionDate = subscriptionDate;
-        this.endingDate = endingDate;
-        this.isActive = isActive;
     }
 
     @Id
@@ -40,14 +42,21 @@ public class Subscription {
     @JoinColumn(name = "team_id", nullable = false)
     @JsonIgnore
     private Group group;
-    @OneToOne
-    @JoinColumn(name = "cancellation_id")
-    private Cancellation cancellation;
-    @NotNull
-    private boolean isActive = true;
     @NotNull
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = IDateService.dateTimePattern, timezone = IDateService.timeZone)
     private Date subscriptionDate;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = IDateService.dateTimePattern, timezone = IDateService.timeZone)
-    private Date endingDate;
+
+    public void addSelfLinkRef()
+    {
+        try {
+            this.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(SubscriptionController.class).getSubscription(this.id)).withSelfRel());
+        } catch (EntityNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void addResourceLinkRef()
+    {
+        this.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(SubscriptionController.class).getSubscriptions()).withRel("all"));
+    }
 }
