@@ -9,7 +9,13 @@ _Used Tech :_
 
 ## Changelog:
 
-### Release 1.0.0
+### Release 1.1.0-alpha
+
+    -> Add EntityAlreadyExist exception
+    -> Add DTO (and DTO converters)
+    -> fix some bugs.
+
+### Release 1.0.0-alpha
 
     -> Add HAL support
     -> Add errors handling

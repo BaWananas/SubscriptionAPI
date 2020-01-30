@@ -1,6 +1,7 @@
 package com.learnings.learningproject.repositories.seeders;
 
 import com.learnings.learningproject.models.Subscription;
+import com.learnings.learningproject.models.exceptions.EntityAlreadyExistException;
 import com.learnings.learningproject.models.exceptions.EntityNotFoundException;
 import com.learnings.learningproject.services.ISubscriptionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +28,7 @@ public class SubscriptionSeeder implements ISeeder{
         {
             try {
                 subscriptionService.createSubscription(1, i%4);
-            } catch (EntityNotFoundException e) {
+            } catch (EntityNotFoundException | EntityAlreadyExistException e) {
                 e.printStackTrace();
             }
         }
@@ -36,7 +37,7 @@ public class SubscriptionSeeder implements ISeeder{
         {
             try {
                 subscriptionService.createSubscription(2, i%4);
-            } catch (EntityNotFoundException e) {
+            } catch (EntityNotFoundException | EntityAlreadyExistException e) {
                 e.printStackTrace();
             }
         }

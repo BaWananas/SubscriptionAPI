@@ -1,6 +1,7 @@
 package com.learnings.learningproject.services;
 
 import com.learnings.learningproject.models.Group;
+import com.learnings.learningproject.models.exceptions.EntityAlreadyExistException;
 import com.learnings.learningproject.models.exceptions.EntityNotFoundException;
 
 import java.util.List;
@@ -14,7 +15,7 @@ public interface IGroupService {
     Group getGroupBySubscription(long subscriptionId) throws EntityNotFoundException;
 
     // Create methods
-    Group createGroup(String name, String description, long associationId);
+    Group createGroup(String name, String description, long associationId) throws EntityAlreadyExistException;
 
     // Update methods
     Group updateGroup(long groupId, String name, String description, long associationId) throws EntityNotFoundException;

@@ -19,8 +19,7 @@ import java.util.Date;
 
 @Entity
 @Data
-@Relation(itemRelation = "item", collectionRelation = "items")
-public class Subscription extends RepresentationModel<Subscription> {
+public class Subscription {
 
     public Subscription() {
     }
@@ -45,18 +44,4 @@ public class Subscription extends RepresentationModel<Subscription> {
     @NotNull
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = IDateService.dateTimePattern, timezone = IDateService.timeZone)
     private Date subscriptionDate;
-
-    public void addSelfLinkRef()
-    {
-        try {
-            this.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(SubscriptionController.class).getSubscription(this.id)).withSelfRel());
-        } catch (EntityNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void addResourceLinkRef()
-    {
-        this.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(SubscriptionController.class).getSubscriptions()).withRel("all"));
-    }
 }

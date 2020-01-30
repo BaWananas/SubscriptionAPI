@@ -18,8 +18,7 @@ import java.util.List;
 @Data
 //Rename the table because of the SQL "group" restricted keyword.
 @Table(name = "team")
-@Relation(itemRelation = "item", collectionRelation = "items")
-public class Group extends RepresentationModel<Group> {
+public class Group {
 
     public Group() {
     }
@@ -42,18 +41,4 @@ public class Group extends RepresentationModel<Group> {
     @JsonIgnore
     @OneToMany(mappedBy = "group", cascade = CascadeType.REMOVE)
     private List<Subscription> subscriptions;
-
-    public void addSelfLinkRef()
-    {
-        try {
-            this.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(GroupController.class).getGroup(this.id)).withSelfRel());
-        } catch (EntityNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void addResourceLinkRef()
-    {
-        this.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(GroupController.class).getGroups()).withRel("all"));
-    }
 }
