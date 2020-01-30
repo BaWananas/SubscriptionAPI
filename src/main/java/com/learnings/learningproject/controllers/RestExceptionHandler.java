@@ -2,6 +2,7 @@ package com.learnings.learningproject.controllers;
 
 import com.learnings.learningproject.models.exceptions.ApiError;
 import com.learnings.learningproject.models.exceptions.ApiValidationError;
+import com.learnings.learningproject.models.exceptions.EntityAlreadyExistException;
 import com.learnings.learningproject.models.exceptions.EntityNotFoundException;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.core.Ordered;
@@ -17,11 +18,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import java.util.logging.Logger;
-
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
+
 
     @NotNull
     @Override
@@ -45,6 +45,13 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleEntityNotFound(EntityNotFoundException ex)
     {
         ApiError error = new ApiError(HttpStatus.NOT_FOUND, "Entity not found.", ex);
+        return this.buildResponseEntity(error);
+    }
+
+    @ExceptionHandler(EntityAlreadyExistException.class)
+    protected ResponseEntity<Object> handleEntityAlreadyExist(EntityAlreadyExistException ex)
+    {
+        ApiError error = new ApiError(HttpStatus.BAD_REQUEST, "Entity already exist.", ex);
         return this.buildResponseEntity(error);
     }
 

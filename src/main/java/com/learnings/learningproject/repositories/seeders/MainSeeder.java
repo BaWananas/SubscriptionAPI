@@ -22,8 +22,6 @@ public class MainSeeder {
 
         @Override
         public void run(String... args) throws Exception {
-            groupSeeder.run();
-            subscriptionSeeder.run();
         }
     }
 }

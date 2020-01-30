@@ -2,6 +2,7 @@ package com.learnings.learningproject.services.implementations;
 
 import com.learnings.learningproject.models.Group;
 import com.learnings.learningproject.models.Subscription;
+import com.learnings.learningproject.models.exceptions.EntityAlreadyExistException;
 import com.learnings.learningproject.models.exceptions.EntityNotFoundException;
 import com.learnings.learningproject.repositories.IGroupRepository;
 import com.learnings.learningproject.repositories.ISubscriptionRepository;
@@ -30,14 +31,17 @@ public class SubscriptionServiceImpl implements ISubscriptionService {
 
     @Override
     public List<Subscription> getSubscriptions() {
-        List<Subscription> subscriptions = (List<Subscription>) subscriptionRepository.findAll();
-        return this.addLinksRef(subscriptions);
+        return (List<Subscription>) subscriptionRepository.findAll();
     }
 
     @Override
     public List<Subscription> getSubscriptionsByGroup(Group group) {
-        List<Subscription> subscriptions = subscriptionRepository.findAllByGroup(group);
-        return this.addLinksRef(subscriptions);
+        return subscriptionRepository.findAllByGroup(group);
+    }
+
+    @Override
+    public List<Subscription> getSubscriptionsByUserId(long id) {
+        return subscriptionRepository.findAllByUserId(id);
     }
 
     @Override
@@ -45,7 +49,7 @@ public class SubscriptionServiceImpl implements ISubscriptionService {
         Optional<Subscription> subscription = subscriptionRepository.findById(id);
         if (subscription.isPresent())
         {
-            return this.addLinksRef(subscription.get());
+            return subscription.get();
         }
         else
         {
@@ -67,19 +71,27 @@ public class SubscriptionServiceImpl implements ISubscriptionService {
     }
 
     @Override
-    public Subscription createSubscription(long groupId, long userId) throws EntityNotFoundException {
+    public Subscription createSubscription(long groupId, long userId) throws EntityNotFoundException, EntityAlreadyExistException {
         return this.createSubscription(groupId, userId, null);
     }
 
     @Override
-    public Subscription createSubscription(long groupId, long userId, Date subDate) throws EntityNotFoundException {
+    public Subscription createSubscription(long groupId, long userId, Date subDate) throws EntityNotFoundException, EntityAlreadyExistException {
         Optional<Group> group = groupRepository.findById(groupId);
         //TODO User existence verification && validation
         if (group.isPresent() && true)
         {
-            if (subDate == null) subDate = dateService.getDateFromNow();
-            Subscription subscription = new Subscription(userId, group.get(), subDate);
-            return this.addLinksRef(subscriptionRepository.save(subscription));
+            Optional<Subscription> existingSubscription = this.subscriptionRepository.findByUserIdAndGroup(userId, group.get());
+            if (!existingSubscription.isPresent())
+            {
+                if (subDate == null) subDate = dateService.getDateFromNow();
+                Subscription subscription = new Subscription(userId, group.get(), subDate);
+                return subscriptionRepository.save(subscription);
+            }
+            else
+            {
+                throw new EntityAlreadyExistException();
+            }
         }
         else
         {
@@ -100,21 +112,5 @@ public class SubscriptionServiceImpl implements ISubscriptionService {
         {
             throw new EntityNotFoundException();
         }
-    }
-
-    private List<Subscription> addLinksRef(List<Subscription> subscriptions)
-    {
-        subscriptions.forEach(subscription -> {
-            subscription.addSelfLinkRef();
-            subscription.addResourceLinkRef();
-        });
-        return subscriptions;
-    }
-
-    private Subscription addLinksRef(Subscription subscription)
-    {
-        subscription.addSelfLinkRef();
-        subscription.addResourceLinkRef();
-        return subscription;
     }
 }

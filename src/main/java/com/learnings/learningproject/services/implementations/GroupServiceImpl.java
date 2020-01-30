@@ -2,6 +2,7 @@ package com.learnings.learningproject.services.implementations;
 
 import com.learnings.learningproject.models.Group;
 import com.learnings.learningproject.models.Subscription;
+import com.learnings.learningproject.models.exceptions.EntityAlreadyExistException;
 import com.learnings.learningproject.models.exceptions.EntityNotFoundException;
 import com.learnings.learningproject.repositories.IGroupRepository;
 import com.learnings.learningproject.repositories.ISubscriptionRepository;
@@ -27,14 +28,12 @@ public class GroupServiceImpl implements IGroupService {
 
     @Override
     public List<Group> getGroups() {
-        List<Group> groups = (List<Group>) groupRepository.findAll();
-        return this.addLinksRef(groups);
+        return (List<Group>) groupRepository.findAll();
     }
 
     @Override
     public List<Group> getGroupsByAssociation(long associationId) {
-        List<Group> groups = groupRepository.findAllByAssociationId(associationId);
-        return this.addLinksRef(groups);
+        return groupRepository.findAllByAssociationId(associationId);
     }
 
     @Override
@@ -42,7 +41,7 @@ public class GroupServiceImpl implements IGroupService {
         Optional<Group> group = groupRepository.findFirstByName(name);
         if (group.isPresent())
         {
-            return this.addLinksRef(group.get());
+            return group.get();
         }
         else
         {
@@ -55,7 +54,7 @@ public class GroupServiceImpl implements IGroupService {
         Optional<Group> group = groupRepository.findById(id);
         if (group.isPresent())
         {
-            return this.addLinksRef(group.get());
+            return group.get();
         }
         else
         {
@@ -68,7 +67,7 @@ public class GroupServiceImpl implements IGroupService {
         Optional<Subscription> subscription = subscriptionRepository.findById(subscriptionId);
         if (subscription.isPresent())
         {
-            return this.addLinksRef(subscription.get().getGroup());
+            return subscription.get().getGroup();
         }
         else
         {
@@ -77,12 +76,20 @@ public class GroupServiceImpl implements IGroupService {
     }
 
     @Override
-    public Group createGroup(String name, String description, long associationId) {
+    public Group createGroup(String name, String description, long associationId) throws EntityAlreadyExistException{
         //TODO Association existence verification && validation
         if (true)
         {
-            Group group = new Group(name, description, associationId);
-            return this.addLinksRef(groupRepository.save(group));
+            Optional<Group> existingGroup = this.groupRepository.findFirstByName(name);
+            if (!existingGroup.isPresent())
+            {
+                Group group = new Group(name, description, associationId);
+                return groupRepository.save(group);
+            }
+            else
+            {
+                throw new EntityAlreadyExistException();
+            }
         }
         else
         {
@@ -105,7 +112,7 @@ public class GroupServiceImpl implements IGroupService {
             {
                 updatedGroup.setAssociationId(associationId);
             }
-            return this.addLinksRef(groupRepository.save(updatedGroup));
+            return groupRepository.save(updatedGroup);
         }
         else
         {
@@ -125,21 +132,5 @@ public class GroupServiceImpl implements IGroupService {
         {
             throw new EntityNotFoundException();
         }
-    }
-
-    private List<Group> addLinksRef(List<Group> groups)
-    {
-        groups.forEach(group -> {
-            group.addSelfLinkRef();
-            group.addResourceLinkRef();
-        });
-        return groups;
-    }
-
-    private Group addLinksRef(Group group)
-    {
-        group.addSelfLinkRef();
-        group.addResourceLinkRef();
-        return group;
     }
 }
