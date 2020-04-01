@@ -1,5 +1,8 @@
 package com.learnings.learningproject;
 
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -10,6 +13,8 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.PathResourceResolver;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 
 @SpringBootApplication
@@ -39,5 +44,19 @@ public class LearningProjectApplication {
     public static void main(String[] args) {
         SpringApplication app = new SpringApplication(LearningProjectApplication.class);
         app.run(args);
+        try {
+            initFirebaseSDK();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void initFirebaseSDK() throws IOException {
+        FirebaseOptions options = new FirebaseOptions.Builder()
+                .setCredentials(GoogleCredentials.fromStream(new FileInputStream(new File("C:\\Users\\beerna\\IdeaProjects\\learningproject\\src\\main\\resources\\service-account-firebase.json"))))
+                //.setDatabaseUrl("https://<DATABASE_NAME>.firebaseio.com/")
+                .build();
+
+        FirebaseApp.initializeApp(options);
     }
 }

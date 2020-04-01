@@ -30,3 +30,4 @@ build/
 ### VS Code ###
 .vscode/
 /src/main/resources/keystore/api.p12
+/src/main/resources/service-account-firebase.json

@@ -1,5 +1,6 @@
 package com.learnings.learningproject.services.implementations;
 
+import com.google.firebase.messaging.*;
 import com.learnings.learningproject.models.Group;
 import com.learnings.learningproject.models.Subscription;
 import com.learnings.learningproject.models.exceptions.EntityAlreadyExistException;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 @Service
 public class GroupServiceImpl implements IGroupService {
@@ -84,6 +86,7 @@ public class GroupServiceImpl implements IGroupService {
             if (!existingGroup.isPresent())
             {
                 Group group = new Group(name, description, associationId);
+                this.sendCreationNotification(group);
                 return groupRepository.save(group);
             }
             else
@@ -131,6 +134,19 @@ public class GroupServiceImpl implements IGroupService {
         else
         {
             throw new EntityNotFoundException();
+        }
+    }
+
+    private void sendCreationNotification(Group newGroup) {
+        Message msg = Message.builder()
+                .setNotification(Notification.builder().setTitle("A group was just successfully created !").setBody("Group " + newGroup.getName() + " was just created.").build())
+                .setTopic("groupCreation")
+                .build();
+        try {
+            String response = FirebaseMessaging.getInstance().send(msg);
+            Logger.getGlobal().info(response);
+        } catch (FirebaseMessagingException e) {
+            e.printStackTrace();
         }
     }
 }
